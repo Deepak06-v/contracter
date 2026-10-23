@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: contracter-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://contracter-frontend.vercel.app
+      - key: MONGODB_URI
+        value: mongodb://deepakwali2006_db_user:vMyqLF0gVrQxQFpT@ac-eazj6s9-shard-00-00.qgtx2x9.mongodb.net:27017,ac-eazj6s9-shard-00-01.qgtx2x9.mongodb.net:27017,ac-eazj6s9-shard-00-02.qgtx2x9.mongodb.net:27017/construction_ledger?ssl=true&replicaSet=atlas-svyr17-shard-0&authSource=admin&appName=Cluster0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: STORAGE_PROVIDER
+        value: local
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_UPLOAD_SIZE_MB
+        value: 8
+      - key: DEMO_SEED_ENABLED
+        value: false

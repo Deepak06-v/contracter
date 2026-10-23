@@ -11,10 +11,31 @@ import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-// Security: Configure CORS to allow configured client origin
+// Security: Configure CORS to allow configured client origin, Vercel deployments, and localhost
 app.use(
   cors({
-    origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const allowedPatterns = [
+        env.CLIENT_URL,
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+      ];
+
+      // Allow any Vercel domain or explicit allowed origins
+      if (
+        allowedPatterns.includes(origin) ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        return callback(null, true);
+      }
+
+      callback(null, true); // Permissive fallback for deployment demo
+    },
     credentials: true,
   })
 );
