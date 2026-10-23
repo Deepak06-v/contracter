@@ -17,6 +17,8 @@ export async function getAgents(_req: AuthenticatedRequest, res: Response): Prom
         .filter((s) => s.assignedAgents.some((aid) => aid.toString() === agent._id.toString()))
         .map((s) => ({ _id: s._id, name: s.name, code: s.code, status: s.status }));
 
+      const assignedSite = assignedSites[0] || null;
+
       return {
         _id: agent._id,
         name: agent.name,
@@ -24,7 +26,8 @@ export async function getAgents(_req: AuthenticatedRequest, res: Response): Prom
         role: agent.role,
         isActive: agent.isActive,
         createdAt: agent.createdAt,
-        assignedSites,
+        assignedSites: assignedSite ? [assignedSite] : [],
+        assignedSite,
       };
     });
 
@@ -36,7 +39,7 @@ export async function getAgents(_req: AuthenticatedRequest, res: Response): Prom
 
 export async function createAgent(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
-    const { name, email, password, assignedSiteIds } = req.body;
+    const { name, email, password, assignedSiteIds, assignedSiteId } = req.body;
 
     if (!name || !email || !password) {
       res.status(400).json({ message: 'Name, email, and initial password are required.' });
@@ -64,12 +67,13 @@ export async function createAgent(req: AuthenticatedRequest, res: Response): Pro
 
     await agent.save();
 
-    // Assign to selected sites if provided
-    if (Array.isArray(assignedSiteIds) && assignedSiteIds.length > 0) {
-      await Site.updateMany(
-        { _id: { $in: assignedSiteIds } },
-        { $addToSet: { assignedAgents: agent._id } }
-      );
+    // Enforce single site assignment: an agent is assigned to at most 1 site
+    const targetSiteId =
+      assignedSiteId ||
+      (Array.isArray(assignedSiteIds) && assignedSiteIds.length > 0 ? assignedSiteIds[0] : null);
+
+    if (targetSiteId && Types.ObjectId.isValid(targetSiteId)) {
+      await Site.findByIdAndUpdate(targetSiteId, { $addToSet: { assignedAgents: agent._id } });
     }
 
     res.status(201).json({
@@ -90,7 +94,7 @@ export async function createAgent(req: AuthenticatedRequest, res: Response): Pro
 export async function updateAgent(req: AuthenticatedRequest, res: Response): Promise<void> {
   try {
     const id = req.params.id as string;
-    const { name, email, isActive, assignedSiteIds } = req.body;
+    const { name, email, isActive, assignedSiteIds, assignedSiteId } = req.body;
 
     if (!Types.ObjectId.isValid(id)) {
       res.status(400).json({ message: 'Invalid agent ID' });
@@ -120,19 +124,30 @@ export async function updateAgent(req: AuthenticatedRequest, res: Response): Pro
 
     await agent.save();
 
-    // Sync site assignments if provided
-    if (Array.isArray(assignedSiteIds)) {
-      // Remove agent from sites not in assignedSiteIds
+    // Enforce single site assignment rule
+    const hasSiteUpdate =
+      assignedSiteId !== undefined || Array.isArray(assignedSiteIds);
+
+    if (hasSiteUpdate) {
+      const targetSiteId =
+        assignedSiteId !== undefined
+          ? assignedSiteId
+          : Array.isArray(assignedSiteIds) && assignedSiteIds.length > 0
+          ? assignedSiteIds[0]
+          : null;
+
+      // 1. Remove agent from any site they were previously assigned to
       await Site.updateMany(
-        { _id: { $nin: assignedSiteIds }, assignedAgents: agent._id },
+        { assignedAgents: agent._id },
         { $pull: { assignedAgents: agent._id } }
       );
 
-      // Add agent to all specified sites
-      await Site.updateMany(
-        { _id: { $in: assignedSiteIds } },
-        { $addToSet: { assignedAgents: agent._id } }
-      );
+      // 2. Assign agent to the single specified site (if provided)
+      if (targetSiteId && Types.ObjectId.isValid(targetSiteId)) {
+        await Site.findByIdAndUpdate(targetSiteId, {
+          $addToSet: { assignedAgents: agent._id },
+        });
+      }
     }
 
     res.json({

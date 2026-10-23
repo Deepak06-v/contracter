@@ -20,7 +20,7 @@ export const AgentModal: React.FC<AgentModalProps> = ({
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isActive, setIsActive] = useState<boolean>(true);
-  const [selectedSiteIds, setSelectedSiteIds] = useState<string[]>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>('');
   const [availableSites, setAvailableSites] = useState<Site[]>([]);
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -38,23 +38,22 @@ export const AgentModal: React.FC<AgentModalProps> = ({
         setEmail(agentToEdit.email);
         setPassword('');
         setIsActive(agentToEdit.isActive);
-        setSelectedSiteIds(agentToEdit.assignedSites.map((s) => s._id));
+        const currentSiteId =
+          agentToEdit.assignedSite?._id ||
+          (agentToEdit.assignedSites && agentToEdit.assignedSites.length > 0
+            ? agentToEdit.assignedSites[0]._id
+            : '');
+        setSelectedSiteId(currentSiteId);
       } else {
         setName('');
         setEmail('');
         setPassword('');
         setIsActive(true);
-        setSelectedSiteIds([]);
+        setSelectedSiteId('');
       }
       setErrorMessage(null);
     }
   }, [isOpen, agentToEdit]);
-
-  const handleToggleSite = (siteId: string) => {
-    setSelectedSiteIds((prev) =>
-      prev.includes(siteId) ? prev.filter((id) => id !== siteId) : [...prev, siteId]
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,19 +71,23 @@ export const AgentModal: React.FC<AgentModalProps> = ({
 
     try {
       setLoading(true);
+      const sitePayload = selectedSiteId ? [selectedSiteId] : [];
+
       if (agentToEdit) {
         await agentApi.updateAgent(agentToEdit._id, {
           name: name.trim(),
           email: email.trim(),
           isActive,
-          assignedSiteIds: selectedSiteIds,
+          assignedSiteIds: sitePayload,
+          assignedSiteId: selectedSiteId || null,
         });
       } else {
         await agentApi.createAgent({
           name: name.trim(),
           email: email.trim(),
           password,
-          assignedSiteIds: selectedSiteIds,
+          assignedSiteIds: sitePayload,
+          assignedSiteId: selectedSiteId || null,
         });
       }
 
@@ -181,34 +184,29 @@ export const AgentModal: React.FC<AgentModalProps> = ({
             </div>
           )}
 
-          {/* Assigned Sites */}
+          {/* Assigned Site (Single Site per Agent) */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-              Assigned Sites
+              Assigned Construction Site
             </label>
             <p className="text-[10px] text-slate-400 mb-1.5">
-              Only checked sites will be visible to this agent.
+              Each agent is dedicated to a single construction job site.
             </p>
             {availableSites.length === 0 ? (
               <p className="text-[11px] text-slate-400 italic">No construction sites available.</p>
             ) : (
-              <div className="space-y-1 max-h-36 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <select
+                value={selectedSiteId}
+                onChange={(e) => setSelectedSiteId(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">-- No Site Assigned (Unassigned) --</option>
                 {availableSites.map((s) => (
-                  <label
-                    key={s._id}
-                    className="flex items-center gap-2 p-1 rounded hover:bg-white cursor-pointer text-xs"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedSiteIds.includes(s._id)}
-                      onChange={() => handleToggleSite(s._id)}
-                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
-                    />
-                    <span className="font-semibold text-slate-800">{s.name}</span>
-                    {s.code && <span className="text-slate-400 text-[10px]">({s.code})</span>}
-                  </label>
+                  <option key={s._id} value={s._id}>
+                    {s.name} {s.code ? `(${s.code})` : ''}
+                  </option>
                 ))}
-              </div>
+              </select>
             )}
           </div>
 

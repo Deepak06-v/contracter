@@ -120,7 +120,7 @@ export async function seedDatabase() {
     console.log(`[Seed] Created Site 2: ${site2.name}`);
   }
 
-  // Site 3: Shared site (Assigned to both Agent 1 and Agent 2)
+  // Site 3: Prestige Villa Phase-2 (Direct Contractor managed)
   let site3 = await Site.findOne({ code: 'SITE-BLR-03' });
   if (!site3) {
     site3 = new Site({
@@ -128,7 +128,7 @@ export async function seedDatabase() {
       code: 'SITE-BLR-03',
       location: 'Kanakapura Road, Bengaluru',
       description: 'Luxury villa community development - 24 units with clubhouse',
-      assignedAgents: [agent1._id, agent2._id],
+      assignedAgents: [],
       status: 'active',
     });
     await site3.save();

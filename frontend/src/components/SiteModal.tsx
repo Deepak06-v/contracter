@@ -188,25 +188,44 @@ export const SiteModal: React.FC<SiteModalProps> = ({
             <label className="block text-[11px] font-semibold text-slate-700 mb-1">
               Assigned Field Agents
             </label>
+            <p className="text-[10px] text-slate-400 mb-1.5">
+              Each agent can belong to a single site. Assigning an agent moves them to this site.
+            </p>
             {availableAgents.length === 0 ? (
               <p className="text-[11px] text-slate-400 italic">No active agents found.</p>
             ) : (
               <div className="space-y-1 max-h-32 overflow-y-auto border border-slate-200 rounded-lg p-2 bg-slate-50">
-                {availableAgents.map((agent) => (
-                  <label
-                    key={agent._id}
-                    className="flex items-center gap-2 p-1 rounded hover:bg-white cursor-pointer text-xs"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedAgentIds.includes(agent._id)}
-                      onChange={() => handleToggleAgent(agent._id)}
-                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
-                    />
-                    <span className="font-semibold text-slate-800">{agent.name}</span>
-                    <span className="text-slate-400 text-[10px]">({agent.email})</span>
-                  </label>
-                ))}
+                {availableAgents.map((agent) => {
+                  const currentSite =
+                    agent.assignedSite ||
+                    (agent.assignedSites && agent.assignedSites.length > 0
+                      ? agent.assignedSites[0]
+                      : null);
+                  const isAssignedElsewhere =
+                    currentSite && siteToEdit && currentSite._id !== siteToEdit._id;
+                  return (
+                    <label
+                      key={agent._id}
+                      className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-white cursor-pointer text-xs"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <input
+                          type="checkbox"
+                          checked={selectedAgentIds.includes(agent._id)}
+                          onChange={() => handleToggleAgent(agent._id)}
+                          className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
+                        />
+                        <span className="font-semibold text-slate-800">{agent.name}</span>
+                        <span className="text-slate-400 text-[10px]">({agent.email})</span>
+                      </div>
+                      {isAssignedElsewhere && !selectedAgentIds.includes(agent._id) && (
+                        <span className="text-[10px] text-slate-400 truncate max-w-[120px]">
+                          (now: {currentSite.name})
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
             )}
           </div>

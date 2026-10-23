@@ -152,6 +152,15 @@ export async function createSite(req: AuthenticatedRequest, res: Response): Prom
     });
 
     await site.save();
+
+    // Enforce single site per agent rule: remove assigned agents from any other sites
+    if (Array.isArray(assignedAgents) && assignedAgents.length > 0) {
+      await Site.updateMany(
+        { _id: { $ne: site._id }, assignedAgents: { $in: assignedAgents } },
+        { $pull: { assignedAgents: { $in: assignedAgents } } }
+      );
+    }
+
     const populated = await site.populate('assignedAgents', 'name email isActive');
 
     res.status(201).json({
@@ -186,6 +195,13 @@ export async function updateSite(req: AuthenticatedRequest, res: Response): Prom
     if (status) site.status = status;
     if (Array.isArray(assignedAgents)) {
       site.assignedAgents = assignedAgents;
+      // Enforce single site per agent rule: remove assigned agents from any other sites
+      if (assignedAgents.length > 0) {
+        await Site.updateMany(
+          { _id: { $ne: site._id }, assignedAgents: { $in: assignedAgents } },
+          { $pull: { assignedAgents: { $in: assignedAgents } } }
+        );
+      }
     }
 
     await site.save();

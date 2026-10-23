@@ -78,12 +78,12 @@ export const SitesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            {isContractor ? 'Sites' : 'Assigned Sites'}
+            {isContractor ? 'Sites' : 'Assigned Site'}
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             {isContractor
               ? 'Manage construction job sites and agent allocations.'
-              : 'Sites assigned to you for bill recording and ledger review.'}
+              : 'Your assigned construction job site for bill recording and ledger review.'}
           </p>
         </div>
 

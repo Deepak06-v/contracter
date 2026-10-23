@@ -109,13 +109,15 @@ export const AgentsPage: React.FC = () => {
                   <th className="py-2.5 px-3.5">Name</th>
                   <th className="py-2.5 px-3.5">Email</th>
                   <th className="py-2.5 px-3.5">Status</th>
-                  <th className="py-2.5 px-3.5">Assigned Sites</th>
+                  <th className="py-2.5 px-3.5">Assigned Site</th>
                   <th className="py-2.5 px-3.5">Added Date</th>
                   <th className="py-2.5 px-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredAgents.map((agent) => (
+                {filteredAgents.map((agent) => {
+                  const site = agent.assignedSite || (agent.assignedSites && agent.assignedSites.length > 0 ? agent.assignedSites[0] : null);
+                  return (
                   <tr key={agent._id} className="hover:bg-slate-50/60 transition-colors">
                     <td className="py-2.5 px-3.5 font-bold text-slate-900 whitespace-nowrap">
                       {agent.name}
@@ -140,20 +142,18 @@ export const AgentsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-2.5 px-3.5">
-                      {agent.assignedSites && agent.assignedSites.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {agent.assignedSites.map((s) => (
-                            <span
-                              key={s._id}
-                              className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.2 rounded bg-slate-100 text-slate-700"
-                            >
-                              <Building2 className="w-2.5 h-2.5 text-amber-600 shrink-0" />
-                              <span className="truncate max-w-[120px]">{s.name}</span>
+                      {site ? (
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/60">
+                          <Building2 className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span className="truncate max-w-[180px]">{site.name}</span>
+                          {site.code && (
+                            <span className="text-[10px] text-amber-700 font-normal">
+                              ({site.code})
                             </span>
-                          ))}
-                        </div>
+                          )}
+                        </span>
                       ) : (
-                        <span className="text-amber-800 italic text-[11px]">No sites</span>
+                        <span className="text-slate-400 italic text-[11px]">Unassigned</span>
                       )}
                     </td>
                     <td className="py-2.5 px-3.5 text-slate-400 whitespace-nowrap text-[11px]">
@@ -184,7 +184,8 @@ export const AgentsPage: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

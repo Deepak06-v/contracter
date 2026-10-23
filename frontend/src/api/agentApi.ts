@@ -15,6 +15,7 @@ export interface AgentUser {
   isActive: boolean;
   createdAt: string;
   assignedSites: AssignedSiteRef[];
+  assignedSite?: AssignedSiteRef | null;
 }
 
 export const agentApi = {
@@ -28,6 +29,7 @@ export const agentApi = {
     email: string;
     password: string;
     assignedSiteIds?: string[];
+    assignedSiteId?: string | null;
   }): Promise<AgentUser> => {
     const res = await apiClient.post<{ agent: AgentUser }>('/agents', data);
     return res.data.agent;
@@ -40,6 +42,7 @@ export const agentApi = {
       email?: string;
       isActive?: boolean;
       assignedSiteIds?: string[];
+      assignedSiteId?: string | null;
     }
   ): Promise<AgentUser> => {
     const res = await apiClient.put<{ agent: AgentUser }>(`/agents/${id}`, data);

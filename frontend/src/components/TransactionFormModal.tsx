@@ -255,21 +255,32 @@ export const TransactionFormModal: React.FC<TransactionFormModalProps> = ({
               <label className="block text-[11px] font-semibold text-slate-700 mb-1">
                 Site <span className="text-rose-500">*</span>
               </label>
-              <select
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-                required
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="" disabled>
-                  Select Site
-                </option>
-                {sites.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name} {s.code ? `(${s.code})` : ''}
+              {sites.length === 1 ? (
+                <div className="w-full px-2.5 py-1.5 text-xs border border-slate-200 bg-slate-100/80 rounded-lg text-slate-800 font-semibold flex items-center justify-between">
+                  <span className="truncate">{sites[0].name}</span>
+                  {sites[0].code && (
+                    <span className="text-[10px] text-slate-500 font-normal shrink-0">
+                      ({sites[0].code})
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <select
+                  value={site}
+                  onChange={(e) => setSite(e.target.value)}
+                  required
+                  className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="" disabled>
+                    Select Site
                   </option>
-                ))}
-              </select>
+                  {sites.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.name} {s.code ? `(${s.code})` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
