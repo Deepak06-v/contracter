@@ -115,7 +115,8 @@ export const transactionApi = {
    * Helper to construct authenticated photo stream URL or fetch photo blob
    */
   getPhotoUrl: (txId: string): string => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const rawUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+    const baseUrl = rawUrl.trim().replace(/\/+$/, '');
     return `${baseUrl}/transactions/${txId}/photo`;
   },
 
